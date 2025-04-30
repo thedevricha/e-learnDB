@@ -1,0 +1,3 @@
+CREATE DATABASE db_elearn;
+
+-- DROP DATABASE IF EXISTS db_elearn;
