@@ -98,8 +98,8 @@ WHERE a.id IS NULL;
 /* 10. List students who have not submitted any assignments. */
 SELECT u.name AS student_name
 FROM students s
-JOIN users u 
+JOIN users u
 ON s.user_id = u.id
-LEFT JOIN submissions sub 
+LEFT JOIN submissions sub
 ON s.id = sub.student_id
 WHERE sub.id IS NULL;
