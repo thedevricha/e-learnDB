@@ -14,12 +14,84 @@ overall_avg_payment AS (
 )
 SELECT 
     stp.student_id,
+    u.name,
     stp.total_payment,
     oap.avg_payment
 FROM student_total_payment stp
 JOIN overall_avg_payment oap ON true
+JOIN students s ON stp.student_id = s.id
+JOIN users u ON s.user_id = u.id
 WHERE stp.total_payment > oap.avg_payment
 ORDER BY stp.total_payment DESC;
+
+/* 2. Find all students who enrolled in courses but never submitted any assignments. */
+-- Step 1: Get all students who enrolled in at least one course
+WITH enrolled_students AS (
+    SELECT 
+        DISTINCT student_id
+    FROM enrollments
+),
+-- Step 2: Get all students who submitted at least one assignment
+students_who_submitted AS (
+    SELECT 
+        DISTINCT student_id
+    FROM submissions
+)
+-- Step 3: Select enrolled students who never submitted any assignment
+SELECT u.name AS student_name
+FROM enrolled_students e
+LEFT JOIN students_who_submitted s ON e.student_id = s.student_id
+JOIN students st ON e.student_id = st.id
+JOIN users u ON st.user_id = u.id
+WHERE s.student_id IS NULL
+ORDER BY u.name;
+
+/* 3. List all courses that have more than 2 lessons but no assignments. Show the course title and number of lessons. */
+-- Step 1: Get all courses that have more than 2 lessons
+WITH courses_with_lessons AS (
+    SELECT 
+        course_id,
+        COUNT(id) AS total_lesson
+    FROM lessons
+    GROUP BY course_id
+    HAVING COUNT(id) > 2
+),
+-- Step 2: Get all course IDs that have at least one assignment.
+courses_with_assignments AS (
+    SELECT 
+        course_id
+    FROM assignments
+    GROUP BY course_id
+    HAVING COUNT(id) >= 1
+)
+-- Step 3: Now select courses from the first CTE that are not in the second CTE.
+SELECT 
+    cl.course_id,
+    c.title,
+    cl.total_lesson
+FROM courses_with_lessons cl
+LEFT JOIN courses_with_assignments ca 
+ON cl.course_id = ca.course_id
+JOIN courses c 
+ON cl.course_id = c.id
+WHERE ca.course_id IS NULL
+ORDER BY cl.total_lesson DESC
+
+/* 4. Find the instructors whose average course rating is higher than the average rating of all courses in the platform. */
+-- Step 1: Get average rating per course
+WITH course_avg_rating AS (
+    SELECT 
+        course_id,
+        ROUND(AVG(rating),2) AS avg_rating
+    FROM reviews
+    GROUP BY course_id
+)
+-- Step 2: Calculate overall platform-wide average rating
+, platform_avg_rating AS (
+    SELECT 
+        ROUND(AVG(avg_rating),2) AS platform_avg
+    FROM course_avg_rating
+)
 
 /* WINDOW FUNCTIONS */
 /* 1. List each student with their total payments and rank them from highest to lowest payer. */
