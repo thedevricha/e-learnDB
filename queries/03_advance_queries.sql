@@ -81,17 +81,61 @@ ORDER BY cl.total_lesson DESC
 -- Step 1: Get average rating per course
 WITH course_avg_rating AS (
     SELECT 
-        course_id,
-        ROUND(AVG(rating),2) AS avg_rating
+        course_id, 
+        ROUND(AVG(rating), 2) AS avg_rating
     FROM reviews
     GROUP BY course_id
-)
+),
 -- Step 2: Calculate overall platform-wide average rating
-, platform_avg_rating AS (
-    SELECT 
-        ROUND(AVG(avg_rating),2) AS platform_avg
+platform_avg_rating AS (
+    SELECT ROUND(AVG(avg_rating), 2) AS platform_avg
     FROM course_avg_rating
+),
+-- Step 3: Join course_avg_rating with courses and instructors to get each instructor's average course rating
+instructor_avg_rating AS (
+    SELECT 
+        c.instructor_id,
+        ROUND(AVG(car.avg_rating), 2) AS instructor_avg
+    FROM courses c
+    JOIN course_avg_rating car ON c.id = car.course_id
+    GROUP BY c.instructor_id
 )
+-- Step 4: Compare instructor’s average with platform average
+SELECT 
+    u.name AS instructor_name,
+    iar.instructor_avg,
+    par.platform_avg
+FROM instructor_avg_rating iar
+JOIN users u ON iar.instructor_id = u.id
+CROSS JOIN platform_avg_rating par
+WHERE iar.instructor_avg > par.platform_avg
+ORDER BY iar.instructor_avg DESC;
+
+/* 5. Find students who have enrolled in at least 2 different courses and submitted to at least 2 different assignments. */
+-- Step 1: Get students with ≥ 2 course enrollments
+WITH enrolled_students AS (
+    SELECT 
+        student_id
+    FROM enrollments
+    GROUP BY student_id
+    HAVING COUNT(DISTINCT course_id) >= 2
+),
+-- Step 2: Get students with ≥ 2 assignment submissions
+submitting_students AS (
+    SELECT 
+        student_id
+    FROM submissions
+    GROUP BY student_id
+    HAVING COUNT(DISTINCT assignment_id) >= 2
+)
+-- Step 3: Find students who are in both groups and show their names
+SELECT 
+    u.name AS student_name
+FROM enrolled_students es
+JOIN submitting_students ss ON es.student_id = ss.student_id
+JOIN students s ON es.student_id = s.id
+JOIN users u ON s.user_id = u.id
+ORDER BY student_name;
 
 /* WINDOW FUNCTIONS */
 /* 1. List each student with their total payments and rank them from highest to lowest payer. */
