@@ -2,7 +2,7 @@ SELECT * FROM users;
 SELECT preferences FROM users WHERE id = 1;
 SELECT * FROM students;
 SELECT * FROM instructors;
-SELECT * FROM courses;  
+SELECT * FROM courses WHERE id =1;  
 SELECT * FROM course_categories;
 SELECT * FROM lessons;
 SELECT * FROM payments;
