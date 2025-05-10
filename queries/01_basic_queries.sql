@@ -1,4 +1,5 @@
 SELECT * FROM users;
+SELECT preferences FROM users WHERE id = 1;
 SELECT * FROM students;
 SELECT * FROM instructors;
 SELECT * FROM courses;  
@@ -6,10 +7,16 @@ SELECT * FROM course_categories;
 SELECT * FROM lessons;
 SELECT * FROM payments;
 SELECT * FROM reviews;
-SELECT * FROM certificates;
-SELECT * FROM submissions;
-SELECT * FROM assignments;
-SELECT * FROM enrollments;
+SELECT * FROM certificates WHERE enrollment_id=175;
+-- DELETE FROM certificates WHERE enrollment_id=175;
+SELECT * FROM submissions
+WHERE assignment_id IN (39, 65, 71)
+AND student_id = 1;
+-- DELETE FROM submissions WHERE assignment_id IN (39, 71)
+SELECT * FROM assignments WHERE course_id=37
+;
+SELECT * FROM enrollments WHERE student_id=1;
+SELECT * FROM certificate_audit;
 
 /* 1. List all users with their name, email, and role. */
 SELECT name, email, role FROM users;

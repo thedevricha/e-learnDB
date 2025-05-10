@@ -97,3 +97,12 @@ CREATE TABLE certificates (
     certificate_url TEXT NOT NULL,
     issued_date DATE DEFAULT CURRENT_DATE
 );
+
+/* Audit Table for Certificate Database Triggers */
+CREATE TABLE certificate_audit (
+    audit_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    enrollment_id INT,
+    certificate_url TEXT,
+    action VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
