@@ -68,7 +68,7 @@ UPDATE courses SET description = 'Updated to include JSONB and triggers' WHERE i
 -- Find courses matching "data analysis":
 SELECT id, title, search_vector
 FROM courses
-WHERE search_vector @@ to_tsquery('english', 'course')
+WHERE search_vector @@ to_tsquery('english', 'course');
 
 ------------------------------------------------------------------------------
 -- Reseed courses.id Sequence
