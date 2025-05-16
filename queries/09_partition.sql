@@ -40,11 +40,12 @@ WHERE inhparent = 'payments'::regclass;
 ------------------------------------------------------------------------------------
 -- Create a Function to Generate Monthly Partitions Automatically
 ------------------------------------------------------------------------------------
-/* Step 1:  Create a Function to Generate Monthly Partitions */
-CREATE OR REPLACE FUNCTION create_payment_partition(month_start DATE)
+/* Step 1: Create a Function to Generate Monthly Partitions */
+CREATE OR REPLACE FUNCTION create_payment_partition(month_timestamp TIMESTAMP WITHOUT TIME ZONE)
 RETURNS void AS $$
 DECLARE
-    month_end DATE := (month_start + INTERVAL '1 month');
+    month_start DATE := DATE_TRUNC('month', month_timestamp)::DATE;
+    month_end DATE := (DATE_TRUNC('month', month_timestamp) + INTERVAL '1 month')::DATE;
     partition_name TEXT := FORMAT('payments_%s', TO_CHAR(month_start, 'YYYY_MM'));
 BEGIN
     EXECUTE FORMAT('
@@ -60,12 +61,21 @@ $$ LANGUAGE plpgsql;
 /* Step 2: Use the Function to Create Partitions for a Date Range */
 DO $$
 DECLARE
-    start_date DATE := DATE_TRUNC('month', CURRENT_DATE);
+    current_month TIMESTAMP := DATE_TRUNC('month', CURRENT_DATE);
     months_ahead INT := 6;
 BEGIN
     FOR i IN 0..months_ahead LOOP
-        PERFORM create_payment_partition(start_date + (i || ' month')::INTERVAL);
+        PERFORM create_payment_partition(current_month + (i || ' month')::INTERVAL);
     END LOOP;
 END;
 $$;
 
+-- Insert test payment
+INSERT INTO payments (student_id, course_id, amount, payment_date)
+VALUES (1, 2, 49.99, '2025-08-15 12:10:25');
+
+-- Only scans August 2025 partition
+SELECT * FROM payments WHERE payment_date >= '2025-08-01' AND payment_date < '2025-09-01';
+
+-- Check it's routed correctly
+SELECT tableoid::regclass, * FROM payments;
